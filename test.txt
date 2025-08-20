@@ -1,0 +1,2 @@
+This is a test file for the SentinelMCP project.
+It contains some text to be ingested by the RAG system.

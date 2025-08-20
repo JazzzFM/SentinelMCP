@@ -3,6 +3,9 @@ from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional
 
 from rag.ingest import IngestionService
+from rag.retriever import RetrievalService
+from agents.orchestrator import AgentOrchestrator
+from app.mcp_server import create_mcp_server
 
 app = FastAPI(
     title="SentinelMCP",
@@ -11,6 +14,9 @@ app = FastAPI(
 )
 
 ingestion_service = IngestionService()
+retrieval_service = RetrievalService()
+agent_orchestrator = AgentOrchestrator()
+mcp_server = create_mcp_server()
 
 class IngestRequest(BaseModel):
     file_path: str
@@ -41,18 +47,25 @@ async def ingest_document(request: IngestRequest):
 
 @app.post("/search", summary="Search for passages")
 async def search_passages(request: SearchRequest):
-    # Placeholder for search logic
-    return {"query": request.query, "passages": []}
+    passages = retrieval_service.retrieve(request.query, request.k)
+    return {"query": request.query, "passages": passages}
 
 @app.post("/ask", summary="Ask a question to the RAG system")
 async def ask_question(request: AskRequest):
-    # Placeholder for RAG logic
-    return {"question": request.question, "answer": "Placeholder answer."}
+    response = agent_orchestrator.process_request(request.dict())
+    return response
 
 @app.post("/mcp/call", summary="Invoke an MCP tool")
 async def call_mcp_tool(request: McpCallRequest):
-    # Placeholder for MCP tool call logic
-    return {"tool": request.tool, "result": "Placeholder result."}
+    if request.tool not in mcp_server.tools:
+        raise HTTPException(status_code=404, detail=f"Tool '{request.tool}' not found.")
+    
+    tool_function = mcp_server.tools[request.tool]
+    try:
+        result = tool_function(**request.params)
+        return {"tool": request.tool, "result": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calling tool '{request.tool}': {e}")
 
 @app.get("/healthz", summary="Health check")
 async def health_check():
