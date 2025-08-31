@@ -1,2 +1,16 @@
-This is a test file for the SentinelMCP project.
-It contains some text to be ingested by the RAG system.
+SentinelMCP Test Document
+
+This is a test document for the SentinelMCP system.
+It demonstrates the ingestion and retrieval capabilities of the multi-agent RAG system.
+
+Key Features:
+- Multi-agent orchestration with planning, retrieval, analysis, and guard agents
+- Vector-based semantic search using ChromaDB
+- MCP (Model Context Protocol) integration
+- CFDI verification tools for Mexican tax documents  
+- CURP lookup capabilities for identity verification
+- OCR and PDF text extraction
+- Policy compliance checking and human-in-the-loop approval
+- Comprehensive audit logging and observability
+
+This system is designed for regulated environments like government, banking, and national security where provenance, reproducibility, and controlled access are critical.

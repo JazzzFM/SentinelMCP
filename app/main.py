@@ -1,11 +1,19 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional
+import logging
+from datetime import datetime
 
 from rag.ingest import IngestionService
 from rag.retriever import RetrievalService
 from agents.orchestrator import AgentOrchestrator
 from app.mcp_server import create_mcp_server
+from infra.logging import setup_logging, get_event_logger, get_logger
+
+# Setup logging
+setup_logging(log_level="INFO")
+logger = get_logger("main")
+event_logger = get_event_logger()
 
 app = FastAPI(
     title="SentinelMCP",
@@ -13,10 +21,13 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# Initialize services
+logger.info("Initializing SentinelMCP services...")
 ingestion_service = IngestionService()
 retrieval_service = RetrievalService()
 agent_orchestrator = AgentOrchestrator()
 mcp_server = create_mcp_server()
+logger.info("SentinelMCP services initialized successfully")
 
 class IngestRequest(BaseModel):
     file_path: str
@@ -37,8 +48,8 @@ class McpCallRequest(BaseModel):
 @app.post("/ingest", summary="Ingest a document")
 async def ingest_document(request: IngestRequest):
     try:
-        ingestion_service.ingest_file(request.file_path, request.metadata)
-        return {"status": "success", "file_path": request.file_path}
+        result = ingestion_service.ingest_file(request.file_path, request.metadata)
+        return result
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
